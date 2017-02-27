@@ -4,13 +4,15 @@ Trying to classifiy photon or merge-photon response of electronic calorimeter. C
 We take it and create features.
 
 Every event describe by ROOT-file.
+
 Every element in ROOT - tuple describing a hit of one (or merged) particle: center cell in calorimeter(elem 6,7), area(elem 5), 
 squares 5*5 around center cell (two, for main and PS-calorimeter: 8,9), event ID(0), energy of square(1), photon hypothesis(10).
 
 **models/** - An attempt to wrap XGB to custom class
 
 **utils/** Preprocessing
-We have a Electronic and Pre-shower Calorimeter:
+
+We have a electronic and pre-shower Calorimeter:
 https://docs.google.com/document/d/1ZD6YeYcOv8fUM4BvnXNWvFzxNuRRHUUvOUirDCFHZ5Y/edit?usp=sharing
 
 There are 3 areas with different granularity. Every area has its own size in pixels, own bound in pixels.
