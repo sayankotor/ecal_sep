@@ -4,8 +4,8 @@ Trying to classifiy photon or merge-photon response of electronic calorimeter.
 
 Every event and hits describe by ROOT-file.
 
-Data for preprocessing goes from data_ROOT\
-Preprocess data lays in obt_data\
+Data for preprocessing goes from **data_ROOT\**
+Preprocess data lays in **obt_data\**
 
 
 **models/** - An attempt to wrap XGB to custom class
