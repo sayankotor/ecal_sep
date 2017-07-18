@@ -45,6 +45,25 @@ def write_data(str1, str2):
         X2, hypo2, y2, energy2 = pickle.load(f_in)
     return np.array(X1), np.array(hypo1), np.array(y1), np.array(energy1), np.array(X2), np.array(hypo2), np.array(y2), np.array(energy2)
 
+def write_data2(str_):
+    with open(str_) as f_in:
+        square_X_5_All, square_X_5_reconstruct, square_y, square_y_reconstruct = pickle.load(f_in)
+    return np.array(square_X_5_All), np.array(square_X_5_reconstruct), np.array(square_y), np.array(square_y_reconstruct)
+
+def preprocess2(str1, str2):
+    square_X_5_All1, square_X_5_reconstruct1, square_y1, square_y_reconstruct1 =  write_data2(str1)
+    square_X_5_All2, square_X_5_reconstruct2, square_y2, square_y_reconstruct2 =  write_data2(str2)
+    X_all = np.concatenate((square_X_5_All1, square_X_5_All2), axis=0)
+    print "X_all shape", X_all.shape
+    Y_all = np.concatenate((square_y1, square_y2), axis=0)
+    X_train,X_val,y_train,y_val = train_test_split(X_all,Y_all)
+    
+    X_all = np.concatenate((square_X_5_reconstruct1, square_X_5_reconstruct2), axis=0)
+    print "X_all shape", X_all.shape
+    Y_all = np.concatenate((square_y_reconstruct1, square_y_reconstruct2), axis=0)
+    X_train_rec,X_val_rec,y_train_rec,y_val_rec = train_test_split(X_all,Y_all)
+    return (X_train,X_val,y_train,y_val), (X_train_rec,X_val_rec,y_train_rec,y_val_rec)
+
 def preprocess(str1, str2):
     X1, hypo1, y1, energy1, X2, hypo2, y2, energy2 =  write_data(str1, str2)
     X_all = np.concatenate((X1, X2), axis=0)

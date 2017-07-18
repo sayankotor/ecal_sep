@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_energy(cell_x_new, cell_y_new, ecal_data_groups, ps_data_groups):
     #energy_ = 0.0
     answ = []
