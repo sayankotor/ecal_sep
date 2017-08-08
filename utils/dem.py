@@ -4,27 +4,6 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
 
-def get_weight(energy1_, energy2_):
-    reweighter = BinsReweighter()
-    reweighter.fit(energy1_, energy2_) #energy
-    X1_weights = reweighter.predict_weights(energy1_)
-    sampler = np.random.choice(np.arange(len(energy1_)),
-                               p = X1_weights/X1_weights.sum(),
-                               replace=False,
-                               size=len(energy2_))
-
-    energy2_ = numpy.array(energy2_)
-    energy1_ = numpy.array(energy1_)
-    X1_w = energy1_[sampler]
-
-    weight2 = np.ones(len(energy2_))
-    print type(weight2), type(X1_weights)
-    weights_ = np.concatenate((X1_weights, weight2), axis = 0)
-    plt.hist(energy2, bins = 50,alpha=0.5)
-    plt.hist(X1_w, bins = 50,alpha=0.5)
-    plt.show()
-    return weights_
-
 def rev_(X_train):
     X_train_rev = list()
     for elem in X_train:
@@ -32,10 +11,7 @@ def rev_(X_train):
     X_train_rev = np.array(X_train_rev)
     return X_train_rev
 
-def get_fpr(tpr_val, tpr_, fpr_):
-    new_trp = [abs(tpr_-0.9)]
-    index = np.argmin(new_trp)
-    return fpr_[index]
+def conc(x): return np.concatenate((x[0], x[1]), axis=0) 
 
 def write_data(str1, str2):
     with open(str1) as f_in:
@@ -47,29 +23,37 @@ def write_data(str1, str2):
 
 def write_data2(str_):
     with open(str_) as f_in:
-        square_X_5_All, square_X_5_reconstruct, square_y, square_y_reconstruct = pickle.load(f_in)
-    return np.array(square_X_5_All), np.array(square_X_5_reconstruct), np.array(square_y), np.array(square_y_reconstruct)
+        square, square_reconstruct, y, y_reconstruct, area, area_reconstruct = pickle.load(f_in)
+    print "area list len:", len(area), len(area_reconstruct)
+    return np.array(square), np.array(y), np.array(area), np.array(square_reconstruct), np.array(y_reconstruct), np.array(area_reconstruct)
+
 
 def preprocess2(str1, str2):
-    square_X_5_All1, square_X_5_reconstruct1, square_y1, square_y_reconstruct1 =  write_data2(str1)
-    square_X_5_All2, square_X_5_reconstruct2, square_y2, square_y_reconstruct2 =  write_data2(str2)
-    X_all = np.concatenate((square_X_5_All1, square_X_5_All2), axis=0)
-    print "X_all shape", X_all.shape
-    Y_all = np.concatenate((square_y1, square_y2), axis=0)
-    X_train,X_val,y_train,y_val = train_test_split(X_all,Y_all)
-    
-    X_all = np.concatenate((square_X_5_reconstruct1, square_X_5_reconstruct2), axis=0)
-    print "X_all shape", X_all.shape
-    Y_all = np.concatenate((square_y_reconstruct1, square_y_reconstruct2), axis=0)
-    X_train_rec,X_val_rec,y_train_rec,y_val_rec = train_test_split(X_all,Y_all)
-    return (X_train,X_val,y_train,y_val), (X_train_rec,X_val_rec,y_train_rec,y_val_rec)
+    square_1, y1, area1, square_reconstruct1, y_reconstruct1, area_reconstruct1 =  write_data2(str1)
+    square_2, y2, area2, square_reconstruct2, y_reconstruct2, area_reconstruct2 =  write_data2(str2)    
+    list1 = write_data2(str1)
+    list2 =  write_data2(str2)
 
-def preprocess(str1, str2):
-    X1, hypo1, y1, energy1, X2, hypo2, y2, energy2 =  write_data(str1, str2)
-    X_all = np.concatenate((X1, X2), axis=0)
-    print "X_all shape", X_all.shape
-    Y_all = np.concatenate((y1, y2), axis=0)
-    #weights = get_weight(energy1, energy2)
-    weights = np.ones(len(X_all))
-    X_train,X_val,y_train,y_val, w_train, w_test = train_test_split(X_all,Y_all,weights)
-    return X_train,X_val,y_train,y_val, w_train, w_test
+    squares, y, area,squares_reconstr, y_reconsrt, area_reconstr = map(conc, zip(list1, list2))
+    
+    ret1 =  train_test_split(squares, y, area)
+    ret2 =  train_test_split(squares_reconstr, y_reconsrt, area_reconstr)
+    return ret1, ret2
+
+def write_data3(str_):
+    with open(str_) as f_in:
+        square_All, square_inner, square_outer, y, y_inner, y_outer, area_list, area_list_inner, area_list_outer = pickle.load(f_in)
+    print "area list len:", len(area_list), len(area_list_inner), len(area_list_outer)
+    return [np.array(square_All), np.array(y), np.array(area_list), np.array(square_inner), np.array(y_inner), np.array(area_list_inner), np.array(square_outer), np.array(y_outer), np.array(area_list_outer)]
+
+def preprocess3(str1, str2):
+    list1 = write_data3(str1)
+    list2 =  write_data3(str2)
+
+    squares, y, area,squares_inner, y_inner, area_inner, squares_outer, y_outer, area_outer = map(conc, zip(list1, list2))
+
+    ret1 =  train_test_split(squares, y, area)
+    ret2 =  train_test_split(squares_inner, y_inner, area_inner)
+    ret3 =  train_test_split(squares_outer, y_outer, area_outer)
+    
+    return ret1, ret2, ret3
