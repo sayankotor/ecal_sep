@@ -1,0 +1,201 @@
+\documentclass{article}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath}
+\usepackage{times}
+\usepackage{color,graphicx,ulem,cmap}
+\usepackage{subcaption}
+\captionsetup{compatibility=false}
+
+\title{Machine Learning approach to photon/Pi0 separation in the LHCb calorimeter}
+\author{Viktoria Chekalina, Fedor Ratnikov  \\
+	SDA / Yandex}
+
+\date{\today}
+% Hint: \title{what ever}, \author{who care} and \date{when ever} could stand 
+% before or after the \begin{document} command 
+% BUT the \maketitle command MUST come AFTER the \begin{document} command! 
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+In the context of problem of $\gamma$-$\pi_0$ we applied neural network's classifier and gradient boosting method. Now we consider the response as ordered set of energy values.
+We take into account preshower information and classify particle with response on calorimeter's area bound too. By this approach we obtain Roc-score nearly 0.97 and False Positive 
+Rate 0.4 on 0.98 True Positive. 
+\end{abstract}
+
+\section{Introduction}
+Becouse of problem of recovering the reactions have been occured, detection is very important in experiments of particle collisions. 
+Unlike the charge particle, leaving a trail on trackers, neutral particle are usially detected in calorimeter sytem, 
+where corpuscules loss energy through creation an electromagnetic shower.
+Calorimeter system of LHCb consisits of a Scintillanting Pad Detector, Preshower, Electromagnetic Calorimeter and Hadronic calorimeter.
+Actually, calorimeters allows to describe nothing except energy allocated in certain space. The identicle energy of single particle and of group of particle's
+is interpered as a track of a same objects. 
+The main part of photon detected in calorimeter appeared in $/Pi_0$ decay. If burned photon dissipated not far enough, they are reconstructed as a single particle and 
+could not resolve due to the granularity. To identify which response goes from single photon and which - from decayed $\pi_0$ is the goal of following study.
+
+\begin{figure}
+\minipage{0.2\textwidth}
+  \includegraphics[width=\linewidth]{pict/calorimeter1.png}
+  \caption{Claster for $\Pi_0$}
+\endminipage\hfill
+\minipage{0.2\textwidth}
+  \includegraphics[width=\linewidth]{pict/calorimeter2.png}
+  \caption{Claster for $\gamma$}
+\endminipage\hfill
+\label{clusters}
+\end{figure}
+
+
+\section{Baseline}
+\subsection{Approach}
+To destinguish response of photon and $\pi_0$-object the 2-layer Multi-layer perceptron was applied. Let's find the central point of pesponse and take into consideration 3*3
+square around it. This structure is called "clusters". The examples of clasters is on fig (\ref{clusters}) Tipicaly, $\pi_0$'s clusters are more spread and asymmetric than photon's ones. So, the features for MLP describes 
+the enlongation and assimetry of response and the relative variation of energy within the cluster. 
+If we have cluster of N cells, where $(x_c, y_c)$ - center and $e_i$ - energy of $i$-cell with coordinates $(x_i, y_i)$, we can define the matrix described the second moment 
+relative to center of cluster. The elements of this matrix are 
+$S_{xx} = \frac{\sum_{i=1}^{N}e_i(x_i - x_c)^2}{\sum_{i=1}^{N}e_i}$, $S_{yy}=\frac{\sum_{i=1}^{N}e_i(x_i - x_c)^2}{\sum_{i=1}^{N}e_i}$,
+$S_{xy}=S_{yx} = \frac{\sum_{i=1}^{N}e_i(x_i - x_c)(y_i - y_c)}{\sum_{i=1}^{N}e_i}$
+The main features are:
+\begin{enumerate}
+\item $r_2 = \langle r \rangle = S_{xx} + S_{yy}$
+\item $r_2, r_4 = 1 - \frac{\langle r^2 \rangle ^2}{\langle r^4 \rangle}$
+\item $k = \sqrt (1 - 4\frac{S_xxS_yy - S_xy^2}{(S_xx + S_yy)^2}$
+\item $asym = \frac{S_xy}{\sqrt{S_xx S_yy}}$
+\item $\frac{E_seed}{E_cl}$
+\item $\frac{E_seed + E_snd}{E_cl}$
+\end{enumerate}
+The feature's destribution among objects of different classes are on (fig.\ref{features}) 
+\subsection{Result}
+A complete description of the method is in the article \cite{main}. In this work a photon sample is obtained from $\beta^{0} \rightarrow \kappa^{\ast} \gamma$ 
+and $\pi_0$ is obtained from $\beta^{0} \rightarrow \kappa^{\ast} \chi$, where $\chi$ is a some set of $D$, $K$, and $\pi$-mesons are used. On mentioned data the 
+approach gives Roc-score nearly 0.86 (fig \ref{baseline}). Retesting on another data gives average score 0.8 (0.78, 0.78, 0.82 for outer, middle, inner region respectively, fig. \ref{mine_baseline})
+\begin{figure} [h]
+\includegraphics[width=\textwidth,scale=0.5]{pict/baselinec.png}
+\caption{Baseline}
+\label{baseline}
+\end{figure}
+
+\begin{figure}
+\minipage{0.4\textwidth}
+  \includegraphics[width=\linewidth]{pict/articlesr2r4.png}
+  \caption{r2r4}
+\endminipage\hfill
+\minipage{0.4\textwidth}
+  \includegraphics[width=\linewidth]{pict/articlesE2.png}
+  \caption{r2}
+\endminipage\hfill
+\label{features}
+\end{figure}
+
+\begin{figure}
+\minipage{0.4\textwidth}
+  \includegraphics[width=\linewidth]{pict/baseline_0.png}
+  \caption{Outer region}
+\endminipage\hfill
+\minipage{0.4\textwidth}
+  \includegraphics[width=\linewidth]{pict/baseline_1.png}
+  \caption{Middle region}
+\endminipage\hfill
+\minipage{0.4\textwidth}
+  \includegraphics[width=\linewidth]{pict/baseline_2.png}
+  \caption{Inner region}
+\endminipage\hfill
+\label{mine_baseline}
+\end{figure}
+
+
+\section{Solution}
+\subsection{Approach}
+To solve this problem we also consider a square around the response seed, but now the size is 5*5. We take value of allocated energy in every digit as a feature and 
+also take into account corresponding response for preshower detector. 
+In process of creating dataset we cut off clusters with common energies less then 2GeV. Conserning $\Pi_0$ samples we excluded double particle which seeds are places more than 2 calorimeter 
+cells apart.
+We use 2-layer Neural Network with configuration shown on fig(). Threre are 2 paralell branches of 2 full-connected layers: one preprocess information from electronic calorimeter, 
+another - from preshower calorimeter. To find enough number of trained epoch we plot train-test score for every trainig step. Also we found out that preshower information is not 
+very informative and could lead to overfitting. Nevertheless, adding it by handling with small amount of units could improve the common score (fig.\ref{plato}). Also we trained 
+XGBoost desision tree, consider particle response as 25 features. 
+Photons is obtained from $\beta^{0} \rightarrow \kappa \pi \pi_0$ and $\Pi_0$ is obtained from $\beta^{0} \rightarrow \kappa \pi \gamma$ decays.
+On this samples Neural Network gives 0.89 ROC-AUC score, XGBoost - 0.97. The comparation of baseline and two described classifier's results is on (fig.\ref{})
+Presicion of such method is on fig(\ref{}). On 98\% of True-Positive classified photons only 40\% of $\pi_0$ is misclassified. 
+
+\subsection{Include bound}
+LHCb calorimeter have a structure with different granularity. There are 3 concentrated area of cells with decreasing resolushion at the distanse from the center(\ref{structure}).
+Historically, border-crossed response were drop out from datasets. Now for two-sided borders we try to reconstruct clusters by information from neibours area. 
+The example of reconstructed clusters is on fig(). For one-sided borders(out border of the out area and inner of the inner) we use incomplete clusters for classisfication. Generaly, 
+we have 9 pre-trained classifier (central, inner, outer border for every region).
+
+\begin{figure} [h]
+\includegraphics[width=\textwidth,scale=0.5]{pict/plato.png}
+\caption{Score Under ROC Curve for train and test samples. Different colur shows either preshower response are considered or not and how many units are used for it}
+\label{plato}
+\end{figure}
+
+\begin{figure}
+\begin{subfigure}{.5\textheight}
+  \includegraphics[width=0.8\linewidth]{pict/1layer.png}
+  \caption{Cross-validation for 1-layer network}
+\end{subfigure}
+\begin{subfigure}{.5\textheight}
+  \includegraphics[width=0.8\linewidth]{pict/layer2.png}
+  \caption{Cross-validation for 2-layer network}
+\end{subfigure}
+\begin{subfigure}{.5\textheight}
+  \centering
+  \includegraphics[width=0.8\linewidth]{pict/layer3.png}
+  \caption{Cross-validation for 3-layer network}
+\end{subfigure}
+\begin{subfigure}{.5\textheight}
+  \centering
+  \includegraphics[width=0.8\linewidth]{pict/layer4.png}
+  \caption{Cross-validation for 4-layer network}
+\end{subfigure}
+\caption{Cross Validation on network configuration with 1, 2, 3, 4 layer. On the horizontal axis point 
+is a tuple of 3 number - units for process the preshower response, units for electronic calorimeter response, dropout.}
+\label{layers}
+\end{figure}
+
+\begin{figure} [h]
+\includegraphics[width=\textwidth,scale=0.5]{pict/xgb.png}
+\caption{Score Under ROC Curve for default and tuned gradient boosting classifiers}
+\label{xgboosts}
+\end{figure}
+
+
+\section{Classifier's optimization}
+If we talk about classifier’s structure, there are a lot of parameters which should be optimized to reach the relatively good quality. 
+Concerning neural networks, the obvious ones are common configuration of network, number of layers and units in each, method of regularization, 
+activation function, etc. Assuming that the configuration described above is fixed, we variate the number of layer and unit, differents methods of optimization also were tried. We use 3-fold 
+cross-validation and train network during 500 epoch (nearby this the plato for quality is obtained)(fig.\ref{plato})
+The images of response are not very complex, so it is expected that optimal number of layer is not very big. 
+Actually, we tried 1, 2, 3, 4 layers with different number of units. 
+Despite of dropout, on the 3 and 4 layers the decrease of quality is obtained. The results of experiments is in fig.\ref{layers}. So, we have maximum on 2-layers configuration 
+with 100 unit for electronic calorimeter's information and 50 for preshower's ones. 
+Then we variate method of optimization to obtain the most accurate convergence on this amount of steps. We took Adadelta, Adagrad and SGD with different learning
+rates, as well as algorithms with momentum.   
+As for the gradient boosting, we asseyed XGBoost, CatBoost and LightGBM classifiers. For each classifier we find best configuration through tuning boosting parameters 
+by Hyperopt. The list of tuned arguments, it's bound value and step is on table (6, 7, 8). The final score of each booster, either with default or tuned parameters,
+are on fig.\ref{xgboosts}. As we see, the quality of classifiers is approximately the same, so we keep using default XGBoost (estimators=2000, learning rate=0.05, max depth = 5, min child weight = 2)
+ 
+
+
+\section{Conclusions}\label{conclusions}
+We introduced a new method for photon-Pi0 separation. It uses full picture of particle response. 
+As a classifier we applied neural network and different gradient boosting methods. 
+We optimized some parameters for every classifiers and chose one with best under-ROC-curve score. 
+Method gave better quality in comparation with baseline procedure.
+Reduce of backgroung and improving efficiency either became possible. 
+
+
+
+
+\begin{thebibliography}{9}
+\bibitem[1]{main}
+A tool for $/gamma /pi_0$ separation at high energies. M. Calvo, E. Cogneras, O. Deschamps, M. Hoballah
+
+\end{thebibliography}
+
+\end{document}
